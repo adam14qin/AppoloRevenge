@@ -1,0 +1,151 @@
+clear all
+%read in input.txt
+M=fileread('Input.txt');
+%read Dimension of maze
+dimension=str2num(M(1));
+%if not square maze
+%Dim_x=str2num(M(1));
+%Dim_y=str2num(M(3));
+%create maze of zeros,
+%Maze(i,j,1),color(B:66,R:82),Maze(i,j,2),normal/circle(78,67) ,Maze(i,j,3/4),direction in
+%x/y, Maze(i,j,5),white 0,grey 1,black 2,Maze(i,j,6),stack 0-n
+Maze=zeros(dimension,dimension,6);
+add=0;
+%convert input to matrix
+for i=1:dimension
+    for j=1:dimension
+        %color
+        Maze(i,j,1)=M(4+((i-1)*dimension+j-1)*10+5+add)*1;
+        %n/c
+        Maze(i,j,2)= M(4+((i-1)*dimension+j-1)*10+7+add)*1;
+        %direction x,y
+        switch M(4+((i-1)*dimension+j-1)*10+9+add)
+            case 'N'
+                   Maze(i,j,3)=-1;
+            case 'S'
+                   Maze(i,j,3)=1;
+            case 'W' 
+                   Maze(i,j,4)=-1; 
+            case 'E' 
+                   Maze(i,j,4)=1;
+        end
+        if (i==7)&&(j==7)
+        else
+           switch M(4+((i-1)*dimension+j-1)*10+10+add)
+              case 'W' 
+                   Maze(i,j,4)=-1; 
+              case 'E' 
+                   Maze(i,j,4)=1;
+           end
+           if M(4+((i-1)*dimension+j-1)*10+10+add)=='W' || M(4+((i-1)*dimension+j-1)*10+10+add)=='E' 
+            add = add+1;
+           end
+        end
+        %visit state all 0
+        %stack state all 0
+    end
+end
+%t_x=7;
+t_x=str2num(M(end-8));
+%t_y=7;
+t_y=str2num(M(end-6));
+AntiMaze=Maze;
+AntiMaze(:,:,3)=-Maze(:,:,3);
+AntiMaze(:,:,4)=-Maze(:,:,4);
+%Initialize
+Maze(1,1,5)=1;
+Maze(1,1,6)=1;
+stack=1;
+%dir normal 1, circle -1
+ while Maze(t_x,t_y,5)==0 && AntiMaze(t_x,t_y,5)==0
+    % find current top of the stack position
+    if stack==0
+        disp('no soln')
+        return
+    end
+    if isempty(find(AntiMaze(:,:,6)==stack, 1))
+        dir=1;
+    elseif isempty(find(Maze(:,:,6)==stack, 1))
+        dir=-1;
+    end
+    if dir==1
+        [n,i,j]=findneighbour(stack,Maze,AntiMaze,t_x,t_y);
+    elseif dir==-1
+        [n,i,j]=findneighbour(stack,AntiMaze,Maze,t_x,t_y);
+    end
+    if n==-1
+        stack=stack+1;
+        Maze(t_x,t_y,5)=1;
+        Maze(t_x,t_y,6)=stack;
+    elseif n>=1
+       stack=stack+1;
+       if dir==1
+           if Maze(i,j,2)==78
+              Maze(i,j,6)=stack;
+              Maze(i,j,5)=1;
+           elseif Maze(i,j,2)==67
+              AntiMaze(i,j,6)=stack;
+              AntiMaze(i,j,5)=1;
+           end
+       elseif dir==-1
+           if Maze(i,j,2)==78
+              AntiMaze(i,j,6)=stack;
+              AntiMaze(i,j,5)=1;
+           elseif Maze(i,j,2)==67
+              Maze(i,j,6)=stack;
+              Maze(i,j,5)=1;
+           end
+       end
+    elseif n==0
+       stack=stack-1;
+       if dir==1
+              Maze(i,j,6)=0;
+              Maze(i,j,5)=2;
+       elseif dir==-1
+              AntiMaze(i,j,6)=0;
+              AntiMaze(i,j,5)=2;
+       end
+    end
+end
+%Maze(:,:,6)
+%AntiMaze(:,:,6)
+a=zeros(stack,1);
+b=zeros(stack,1);
+for n=1:stack
+    if isempty(find(AntiMaze(:,:,6)==n, 1))
+        pos=find(Maze(:,:,6)==n, 1);
+    elseif isempty(find(Maze(:,:,6)==n, 1))
+        pos=find(AntiMaze(:,:,6)==n, 1);
+    end
+    if mod(pos,7)==0
+       a(n)=7;
+    else
+       a(n)=mod(pos,7);
+    end
+    b(n)=(pos-a(n))/7+1;
+    if n<=stack-1
+        x=['(',num2str(a(n)),',',num2str(b(n)),')','=>'];
+    elseif n==stack
+        x=['(',num2str(a(n)),',',num2str(b(n)),')'];
+    end
+    disp(x)
+    if mod(n,9)~=0
+       fprintf('\b');
+    end
+end
+C=imread('Maze.jpg');
+image(C)
+%set(gca, 'XTickLabelMode', 'manual', 'XTickLabel', []);
+%set(gca, 'YTickLabelMode', 'manual', 'YTickLabel', []);
+hold on
+quiver(13,43,60,0,0,'color','orange','LineWidth',2,'MaxHeadSize',5);
+for n=1:stack
+    if isempty(find(AntiMaze(:,:,6)==n, 1))
+       dir_x=Maze(a(n),b(n),3);
+       dir_y=Maze(a(n),b(n),3);
+    elseif isempty(find(Maze(:,:,6)==n, 1))
+       dir_x=
+       dir_y=
+    end
+    quiver(13,43,60,0,0,'color','orange','LineWidth',2,'MaxHeadSize',5);
+end
